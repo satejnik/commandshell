@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="CommandShell.Metadata.OptionBaseAttribute" Collapsed="true">
+    <Position X="7.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAAABAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Metadata\OptionBaseAttribute.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CommandShell.Metadata.NamedOptionAttribute" Collapsed="true">
+    <Position X="5.25" Y="2" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAA=</HashCode>
+      <FileName>Metadata\NamedOptionAttribute.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CommandShell.Metadata.ValueAttribute" Collapsed="true">
+    <Position X="10.25" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAA=</HashCode>
+      <FileName>Metadata\ValueAttribute.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CommandShell.Metadata.ValueListAttribute" Collapsed="true">
+    <Position X="12.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAAAAAAAAAAEAAAAAAAABAIAAAAIIIAAAAAAAAAA=</HashCode>
+      <FileName>Metadata\ValueListAttribute.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CommandShell.Metadata.OptionAttribute" Collapsed="true">
+    <Position X="3" Y="4.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Metadata\OptionAttribute.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CommandShell.Metadata.OptionListAttribute" Collapsed="true">
+    <Position X="5.5" Y="4.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAA=</HashCode>
+      <FileName>Metadata\OptionListAttribute.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CommandShell.Metadata.RequiredOptionAttribute" Collapsed="true">
+    <Position X="4.25" Y="3.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Metadata\RequiredOptionAttribute.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CommandShell.Metadata.SwitchAttribute" Collapsed="true">
+    <Position X="8" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Metadata\SwitchAttribute.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

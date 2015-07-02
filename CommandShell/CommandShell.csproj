@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{30D2082D-828D-46F9-B052-7A228E8D7BF1}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CommandShell</RootNamespace>
+    <AssemblyName>CommandShell</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Helpers\Converter.cs" />
+    <Compile Include="Helpers\Validator.cs" />
+    <Compile Include="TwoWayEnumerator.cs" />
+    <Compile Include="Commands\ExitCommand.cs" />
+    <Compile Include="Commands\HelpCommand.cs" />
+    <Compile Include="Commands\HelpCommandOptions.cs" />
+    <Compile Include="Extensions\CharExtensions.cs" />
+    <Compile Include="Extensions\PropertyInfoExtensions.cs" />
+    <Compile Include="Extensions\TypeExtensions.cs" />
+    <Compile Include="Helpers\Asserts.cs" />
+    <Compile Include="Helpers\HelpBuilder.cs" />
+    <Compile Include="ColourfulConsoleWriter.cs" />
+    <Compile Include="Infrastucture\AssemblyInfo.cs" />
+    <Compile Include="Infrastucture\CommandNamedOptionMetadata.cs" />
+    <Compile Include="Infrastucture\CommandOptionListOptionMetadata.cs" />
+    <Compile Include="Infrastucture\CommandRequiredOptionMetadata.cs" />
+    <Compile Include="Infrastucture\CommandValueListOptionMetadata.cs" />
+    <Compile Include="Infrastucture\Parsing\ParsingErrorBase.cs" />
+    <Compile Include="Infrastucture\Parsing\CommandLineParser.cs" />
+    <Compile Include="Infrastucture\Parsing\CommandOptionsParser.cs" />
+    <Compile Include="ErrorConsoleWriter.cs" />
+    <Compile Include="Infrastucture\ExitInteractiveModeException.cs" />
+    <Compile Include="Infrastucture\Parsing\ParsingError.cs" />
+    <Compile Include="Infrastucture\Parsing\ParsingResult.cs" />
+    <Compile Include="Infrastucture\Parsing\ParsingState.cs" />
+    <Compile Include="Infrastucture\ShellCommandHelpException.cs" />
+    <Compile Include="Infrastucture\ShellHelpException.cs" />
+    <Compile Include="Infrastucture\CommandDispatcher.cs" />
+    <Compile Include="Infrastucture\CommandsResolver.cs" />
+    <Compile Include="Infrastucture\ICommandsResolver.cs" />
+    <Compile Include="Infrastucture\ShellException.cs" />
+    <Compile Include="Infrastucture\CommandValueOptionMetadata.cs" />
+    <Compile Include="Metadata\NamedOptionAttribute.cs" />
+    <Compile Include="Metadata\OptionBaseAttribute.cs" />
+    <Compile Include="Metadata\RequiredOptionAttribute.cs" />
+    <Compile Include="Metadata\SwitchAttribute.cs" />
+    <Compile Include="Metadata\ValueAttribute.cs" />
+    <Compile Include="Metadata\OptionListAttribute.cs" />
+    <Compile Include="Metadata\ValueListAttribute.cs" />
+    <Compile Include="Infrastucture\CommandOptionsMetadata.cs" />
+    <Compile Include="Metadata\GetHelpAttribute.cs" />
+    <Compile Include="Metadata\RunCommandAttribute.cs" />
+    <Compile Include="Metadata\OptionAttribute.cs" />
+    <Compile Include="Infrastucture\CommandMetadata.cs" />
+    <Compile Include="Infrastucture\CommandOptionMetadataBase.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Shell.cs" />
+    <Compile Include="Metadata\ShellCommandAttribute.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Attributes.cd" />
+    <None Include="OptionsMetadata.cd" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="CommandShell.Infrastucture.CommandOptionMetadataBase" Collapsed="true">
+    <Position X="4.25" Y="0.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAACAAAAEAkAAAAABAAAAAAAAAAAAAAAQEAMQCAgAA=</HashCode>
+      <FileName>Infrastucture\CommandOptionMetadataBase.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CommandShell.Infrastucture.CommandNamedOptionMetadata" Collapsed="true">
+    <Position X="0.75" Y="1.75" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIAAEAAAAAAAAAAAAEAAAAAIAAAAAAAAAAAAA=</HashCode>
+      <FileName>Infrastucture\CommandNamedOptionMetadata.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CommandShell.Infrastucture.CommandValueListOptionMetadata" Collapsed="true">
+    <Position X="4" Y="1.75" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAABAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Infrastucture\CommandValueListOptionMetadata.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CommandShell.Infrastucture.CommandValueOptionMetadata" Collapsed="true">
+    <Position X="7.5" Y="1.75" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAA=</HashCode>
+      <FileName>Infrastucture\CommandValueOptionMetadata.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CommandShell.Infrastucture.CommandRequiredOptionMetadata" Collapsed="true">
+    <Position X="0.5" Y="3.25" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAAAAAAAAAAAAACBAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Infrastucture\CommandRequiredOptionMetadata.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CommandShell.Infrastucture.CommandOptionListOptionMetadata" Collapsed="true">
+    <Position X="0.5" Y="4.75" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAA=</HashCode>
+      <FileName>Infrastucture\CommandOptionListOptionMetadata.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
