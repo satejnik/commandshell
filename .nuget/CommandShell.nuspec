@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>CommandShell</id>
+    <version>1.0.0</version>
+    <authors>Alexander Isakov</authors>
+    <owners>Alexander Isakov</owners>
+    <licenseUrl>http://opensource.org/licenses/MS-PL</licenseUrl>
+    <projectUrl>https://github.com/satejnik/commandshell</projectUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>Library for fast and easy creating console/shell-like .NET programs.</description>
+    <copyright>Copyright 2015</copyright>
+    <tags>console shell command helper library</tags>
+  </metadata>
+  <files>
+		<file src="..\CommandShell\bin\Release\CommandShell.*" target="lib\net40-client\" exclude="..\CommandShell\bin\Release\*.pdb" />
+  </files>
+</package>
