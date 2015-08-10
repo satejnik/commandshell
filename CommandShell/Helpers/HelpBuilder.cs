@@ -94,7 +94,7 @@ namespace CommandShell.Helpers
                     if (named.HasLongName) builder.Append("--").Append(named.LongName);
                     builder.Append(" option");
                 }
-                else if (error.OptionMetadata.IsValueOption && !error.OptionMetadata.IsListOption)
+                else if (error.OptionMetadata != null && error.OptionMetadata.IsValueOption && !error.OptionMetadata.IsListOption)
                 {
                     builder.Append("argument (" + ((CommandValueOptionMetadata)error.OptionMetadata).Index + ")");
                 }
@@ -111,7 +111,7 @@ namespace CommandShell.Helpers
                         writer.WriteLine("   - invalid value: {0}", error.Value);
                         break;
                     case ParsingErrorBase.UnboundValue:
-                        writer.WriteLine("   - unbound value: {0}", error.Value);
+                        writer.WriteLine("Uknown parameter: {0}", error.Value);
                         break;
                     case ParsingErrorBase.RedundantOption:
                         writer.WriteLine("   - {0} is redundant", name);
