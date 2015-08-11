@@ -134,8 +134,8 @@ namespace CommandShell
             Commands = new Dictionary<CommandMetadata, object>();
             foreach (var commandMetadata in metadata)
                 Commands.Add(commandMetadata, Activator.CreateInstance(commandMetadata.Type));
-            Commands.Add(Infrastucture.CommandsResolver.GetCommandMetadata(typeof(HelpCommand)), new HelpCommand());
-            if (InteractiveMode) Commands.Add(Infrastucture.CommandsResolver.GetCommandMetadata(typeof(ExitCommand)), new ExitCommand());
+            if (Commands.All(command => command.Key.Type != typeof(HelpCommand))) Commands.Add(Infrastucture.CommandsResolver.GetCommandMetadata(typeof(HelpCommand)), new HelpCommand());
+            if (InteractiveMode && Commands.All(command => command.Key.Type != typeof(ExitCommand))) Commands.Add(Infrastucture.CommandsResolver.GetCommandMetadata(typeof(ExitCommand)), new ExitCommand());
         }
 
         private static void ShowShellHelp()
