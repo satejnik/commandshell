@@ -34,7 +34,7 @@ namespace CommandShell
             Output = Console.Out;
             Error = new ErrorConsoleWriter(Console.Error);
             CommandsResolver = Infrastucture.CommandsResolver.Default;
-            HelpBuilder = HelpBuilder.Current;
+            HelpBuilder = HelpBuilder.Default;
             AssemblyInfo = new AssemblyInfo(Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly());
         }
 

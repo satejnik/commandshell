@@ -15,13 +15,11 @@ namespace CommandShell.Helpers
 {
     public class HelpBuilder
     {
-        #region Constructor
+        #region Constructors
 
         private static readonly HelpBuilder Instance = new HelpBuilder();
 
-        private HelpBuilder() { }
-
-        public static HelpBuilder Current
+        public static HelpBuilder Default
         {
             get
             {
@@ -33,8 +31,11 @@ namespace CommandShell.Helpers
 
         #region Methods
 
-        public virtual void PrintHelp(TextWriter writer, IEnumerable<CommandMetadata> commands, AssemblyInfo info)
+        public virtual void PrintHelp(TextWriter writer = null, IEnumerable<CommandMetadata> commands = null, AssemblyInfo info = null)
         {
+            if (writer == null) writer = Shell.Output;
+            if (commands == null) commands = Shell.Commands.Keys;
+            if (info == null) info = AssemblyInfo.Current;
             PrintDefaultHelpHeader(writer, info);
             writer.WriteLine();
             writer.WriteLine("Available commands are:");
@@ -42,19 +43,33 @@ namespace CommandShell.Helpers
             writer.WriteLine();
         }
 
-        public virtual void PrintCommandHelp(TextWriter writer, CommandMetadata metadata, AssemblyInfo info, ParsingResult parsingResult)
+        public virtual void PrintCommandHelp(CommandMetadata metadata, AssemblyInfo info = null, ParsingResult parsingResult = null)
         {
+            PrintCommandHelp(Shell.Output, metadata, info, parsingResult);
+        }
+
+        public virtual void PrintCommandHelp(TextWriter writer, CommandMetadata metadata, AssemblyInfo info = null, ParsingResult parsingResult = null)
+        {
+            if (info == null) info = AssemblyInfo.Current;
             //PrintDefaultHelpHeader(writer, info);
             //writer.WriteLine();
             writer.Write(metadata.Name);
             writer.Write(" - ");
             writer.WriteLine(metadata.Description);
             writer.WriteLine();
-            PrintDefaultHelpCommandErrors(writer, parsingResult.Errors);
-            if (!parsingResult) writer.WriteLine();
+            if (parsingResult != null)
+            {
+                PrintDefaultHelpCommandErrors(writer, parsingResult.Errors);
+                if (!parsingResult) writer.WriteLine();
+            }
             PrintDefaultHelpCommandUsage(writer, metadata);
             writer.WriteLine();
             PrintDefaultHelpCommandOptions(writer, metadata);
+        }
+
+        public virtual void PrintError(Exception error)
+        {
+            PrintError(Shell.Error, error);
         }
 
         public virtual void PrintError(TextWriter writer, Exception error)
@@ -69,7 +84,7 @@ namespace CommandShell.Helpers
 
         #region Helpers
 
-        protected void PrintDefaultHelpHeader(TextWriter writer, AssemblyInfo info)
+        protected virtual void PrintDefaultHelpHeader(TextWriter writer, AssemblyInfo info)
         {
             writer.Write(info.FriendlyName);
             writer.Write(" ");
@@ -79,7 +94,7 @@ namespace CommandShell.Helpers
             writer.WriteLine(info.Company);
         }
 
-        protected void PrintDefaultHelpCommandErrors(TextWriter writer, IEnumerable<ParsingError> errors)
+        protected virtual void PrintDefaultHelpCommandErrors(TextWriter writer, IEnumerable<ParsingError> errors)
         {
             errors = errors.ToArray();
             if (errors.Any()) writer.WriteLine("ERROR(S):");
@@ -123,7 +138,7 @@ namespace CommandShell.Helpers
             }
         }
 
-        protected void PrintDefaultHelpCommandUsage(TextWriter writer, CommandMetadata command)
+        protected virtual void PrintDefaultHelpCommandUsage(TextWriter writer, CommandMetadata command)
         {
             const int staticWidth = 60;
             var linesCount = 1;
@@ -158,7 +173,7 @@ namespace CommandShell.Helpers
                         usageBuilder.Append("--").Append(option.LongName);
                     usageBuilder.Append(" <value(s)>");
                     usageBuilder.Append("] ");
-                    if (usageBuilder.Length <= staticWidth*linesCount) continue;
+                    if (usageBuilder.Length <= staticWidth * linesCount) continue;
                     usageBuilder.AppendLine().Append("       ");
                     linesCount++;
                 }
@@ -182,7 +197,7 @@ namespace CommandShell.Helpers
             writer.WriteLine(usageBuilder.ToString());
         }
 
-        protected void PrintDefaultHelpCommandOptions(TextWriter writer, CommandMetadata metadata)
+        protected virtual void PrintDefaultHelpCommandOptions(TextWriter writer, CommandMetadata metadata)
         {
             if (metadata.Options == null || !metadata.Options.Any()) return;
             const int length = 20;
@@ -221,7 +236,7 @@ namespace CommandShell.Helpers
             }
         }
 
-        protected void PrintDefaultHelpCommands(TextWriter writer, IEnumerable<CommandMetadata> commands)
+        protected virtual void PrintDefaultHelpCommands(TextWriter writer, IEnumerable<CommandMetadata> commands)
         {
             var commandsMetadata = commands.Where(meta => meta.Name != "help" && meta.Name != "exit").OrderBy(meta => meta.Name);
             var length = commandsMetadata.Max(meta => meta.Name.Length) + 1;

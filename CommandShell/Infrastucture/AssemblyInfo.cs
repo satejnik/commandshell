@@ -25,6 +25,14 @@ namespace CommandShell.Infrastucture
 
         #region Properties
 
+        public static AssemblyInfo Current
+        {
+            get
+            {
+                return new AssemblyInfo(Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly());
+            }
+        }
+
         public Assembly Assembly { get; private set; }
 
         #region Identity

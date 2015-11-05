@@ -7,7 +7,7 @@ using System;
 
 namespace CommandShell.Metadata
 {
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
     public sealed class GetHelpAttribute : Attribute
     {
     }
