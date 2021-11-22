@@ -16,7 +16,7 @@ namespace CommandShell.Infrastucture
 
         public virtual IEnumerable<CommandMetadata> Resolve()
         {
-            return AttributedModelServices.GetMetadataFromTypeAssembly(Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly());
+            return AppDomain.CurrentDomain.GetAssemblies().SelectMany(AttributedModelServices.GetMetadataFromTypeAssembly);
         }
 
         [Obsolete("This method may be removedin the future releses, please use AttributedModelServices.GetMetadataFromTypeAssembly instead.")]
