@@ -3,13 +3,13 @@
 //  See LICENSE for details or visit http://opensource.org/licenses/MS-PL.
 //	----------------------------------------------------------------------
 
+using CommandShell.Infrastucture;
+using CommandShell.Infrastucture.Parsing;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CommandShell.Infrastucture;
-using CommandShell.Infrastucture.Parsing;
 
 namespace CommandShell.Helpers
 {
@@ -34,7 +34,7 @@ namespace CommandShell.Helpers
         public virtual void PrintHelp(TextWriter writer = null, IEnumerable<CommandMetadata> commands = null, AssemblyInfo info = null)
         {
             if (writer == null) writer = Shell.Output;
-            if (commands == null) commands = Shell.Commands.Keys;
+            if (commands == null) commands = Shell.Commands;
             if (info == null) info = AssemblyInfo.Current;
             PrintDefaultHelpHeader(writer, info);
             writer.WriteLine();

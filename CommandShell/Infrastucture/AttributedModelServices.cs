@@ -21,16 +21,19 @@ namespace CommandShell.Infrastucture
 
         public static IEnumerable<CommandMetadata> GetMetadataFromTypeAssembly(Assembly assembly)
         {
+            if (assembly == null) throw new ArgumentNullException("assembly");
             return assembly.GetTypes().Where(type => Attribute.IsDefined(type, typeof(ShellCommandAttribute), false) && !Attribute.IsDefined(type, typeof(IgnoreCommandAttribute), false) && !type.IsAbstract).Select(GetMetadataFromType);
         }
 
-        public static CommandMetadata GetMetadata(object obj)
+        public static CommandMetadata GetMetadata(object command)
         {
-            return GetMetadataFromType(obj.GetType());
+            if(command == null) throw new ArgumentNullException("command");
+            return GetMetadataFromType(command.GetType());
         }
 
         public static CommandMetadata GetMetadataFromType(Type type)
         {
+            if (type == null) throw new ArgumentNullException("type");
             AssertCommandType(type);
             var attribute = (ShellCommandAttribute)type.GetCustomAttributes(typeof(ShellCommandAttribute), false).SingleOrDefault();
             if (attribute.Options != null) AssertOptionsType(attribute.Options);
@@ -81,7 +84,6 @@ namespace CommandShell.Infrastucture
             if (setter == null) throw new MissingMemberException("{0} property doesn't have public setter.".FormatFor(propertyInfo.Name));
             if (!setter.IsPublic || setter.IsAbstract) throw new MemberAccessException("{0} property should be public and not abstract.".FormatFor(propertyInfo.Name));
             CommandOptionMetadataBase optionMetadata = null;
-            // ReSharper disable CanBeReplacedWithTryCastAndCheckForNull
             if (attribute is ValueAttribute)
             {
                 Asserts.OperationNotAllowed(!propertyInfo.PropertyType.CanConvertFromString(), "{0} property decorated with {1} attribute must be of primitive type, decimal, DateTime or enum. Otherwise make sure custom type is decorated with TypeConverterAttribute attribute with a provided conversion from string.".FormatFor(propertyInfo.Name, attribute.GetType().Name));
@@ -149,7 +151,6 @@ namespace CommandShell.Infrastucture
                     DefaultValue = ((OptionAttribute)attribute).DefaultValue
                 };
             }
-            // ReSharper disable once PossibleNullReferenceException
             optionMetadata.Description = attribute.Description;
             optionMetadata.MetaValue = attribute.MetaValue;
             return optionMetadata;

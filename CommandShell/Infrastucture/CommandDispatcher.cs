@@ -3,11 +3,11 @@
 //  See LICENSE for details or visit http://opensource.org/licenses/MS-PL.
 //	----------------------------------------------------------------------
 
+using CommandShell.Infrastucture.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using CommandShell.Infrastucture.Parsing;
 
 namespace CommandShell.Infrastucture
 {
@@ -15,49 +15,72 @@ namespace CommandShell.Infrastucture
     {
         #region Methods
 
-        internal static int DispatchCommand(Dictionary<CommandMetadata, object> commands, string[] args)
+        internal static int DispatchCommand(CommandMetadata[] commands, string[] args)
         {
-            if (args == null || !args.Any()) throw new ShellHelpException();
-            var commandName = args.First().ToLower();
-            if (commands.All(meta => meta.Key.Name != commandName)) throw new ShellHelpException();
-            var command = commands.Single(meta => meta.Key.Name == commandName).Value;
-            var metadata = commands.Single(meta => meta.Key.Name == commandName).Key;
-            return RunCommand(command, metadata, args.Skip(1).ToArray());
+            try
+            {
+                if (args == null || !args.Any()) throw new ShellHelpException();
+                var commandName = args.First().ToLower();
+                var metadata = commands.SingleOrDefault(meta => meta.Name == commandName);
+                if (metadata == null) throw new ShellHelpException();
+                var command = Shell.CommandActivator.Create(metadata.Type);
+                try
+                {
+                    return RunCommand(command, metadata, args.Skip(1).ToArray());
+                }
+                finally
+                {
+                    Shell.CommandActivator.Release(command);
+                }
+            }
+            catch (ShellHelpException)
+            {
+                ShowHelp();
+            }
+            return -1;
         }
 
         internal static int RunCommand(object command, CommandMetadata metadata, string[] args)
         {
-            if (metadata.Options == null)
+            try
             {
+                if (metadata.Options == null)
+                {
+                    try
+                    {
+                        return Run(command, metadata, null);
+                    }
+                    catch (ShellCommandHelpException helpException)
+                    {
+                        helpException.ParsingResult = new ParsingResult(new List<ParsingError>());
+                        throw;
+                    }
+                }
+                ParsingResult parsingResult;
+                object options = null;
+                if (metadata.Type == metadata.Options.Type)
+                    parsingResult = CommandOptionsParser.Parse(metadata.Options, command, args);
+                else
+                {
+                    options = Activator.CreateInstance(metadata.Options.Type);
+                    parsingResult = CommandOptionsParser.Parse(metadata.Options, options, args);
+                }
+                if (!parsingResult) throw new ShellCommandHelpException(metadata) { ParsingResult = parsingResult };
                 try
                 {
-                    return Run(command, metadata, null);
+                    return Run(command, metadata, options);
                 }
                 catch (ShellCommandHelpException helpException)
                 {
-                    helpException.ParsingResult = new ParsingResult(new List<ParsingError>());
+                    helpException.ParsingResult = parsingResult;
                     throw;
                 }
             }
-            ParsingResult parsingResult;
-            object options = null;
-            if (metadata.Type == metadata.Options.Type)
-                parsingResult = CommandOptionsParser.Parse(metadata.Options, command, args);
-            else
+            catch (ShellCommandHelpException commandHelp)
             {
-                options = Activator.CreateInstance(metadata.Options.Type);
-                parsingResult = CommandOptionsParser.Parse(metadata.Options, options, args);
+                ShowCommandHelp(commandHelp.Metadata, commandHelp.ParsingResult);
             }
-            if (!parsingResult) throw new ShellCommandHelpException(command) { ParsingResult = parsingResult };
-            try
-            {
-                return Run(command, metadata, options);
-            }
-            catch (ShellCommandHelpException helpException)
-            {
-                helpException.ParsingResult = parsingResult;
-                throw;
-            }
+            return -1;
         }
 
         #endregion
@@ -76,6 +99,37 @@ namespace CommandShell.Infrastucture
                 throw invocationError.InnerException;
             }
             return returnValue != null ? (int)returnValue : 0;
+        }
+
+        private static void ShowCommandHelp(CommandMetadata metadata, ParsingResult parsingResult)
+        {
+            if (metadata.HelpMethod == null) Shell.HelpBuilder.PrintCommandHelp(Shell.Output, metadata, GetAssemblyInfo(), parsingResult);
+            else
+            {
+                var parameters = new List<object>();
+                foreach (var type in metadata.HelpMethod.GetParameters().Select(param => param.ParameterType))
+                    if (type == typeof(CommandMetadata)) parameters.Add(metadata);
+                    else parameters.Add(parsingResult);
+                var command = Shell.CommandActivator.Create(metadata.Type);
+                try
+                {
+                    Shell.Output.WriteLine(metadata.HelpMethod.Invoke(command, parameters.ToArray()));
+                }
+                finally
+                {
+                    Shell.CommandActivator.Release(command);
+                }
+            }
+        }
+
+        private static void ShowHelp()
+        {
+            Shell.HelpBuilder.PrintHelp(Shell.Output, Shell.Commands, GetAssemblyInfo());
+        }
+
+        private static AssemblyInfo GetAssemblyInfo()
+        {
+            return new AssemblyInfo(Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly());
         }
 
         #endregion
