@@ -51,6 +51,8 @@
     <Compile Include="Helpers\Converter.cs" />
     <Compile Include="Helpers\Validator.cs" />
     <Compile Include="Infrastucture\AttributedModelServices.cs" />
+    <Compile Include="Infrastucture\DefaultCommandActivator.cs" />
+    <Compile Include="Infrastucture\ICommandActivator.cs" />
     <Compile Include="Metadata\IgnoreCommandAttribute.cs" />
     <Compile Include="TwoWayEnumerator.cs" />
     <Compile Include="Commands\ExitCommand.cs" />

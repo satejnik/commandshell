@@ -18,14 +18,6 @@ namespace CommandShell
 {
     public static class Shell
     {
-        #region Fields
-
-        internal static bool InteractiveMode = false;
-        internal static Dictionary<CommandMetadata, object> Commands;
-        internal static AssemblyInfo AssemblyInfo;
-
-        #endregion
-
         #region Constructor
 
         static Shell()
@@ -34,6 +26,7 @@ namespace CommandShell
             Output = Console.Out;
             Error = new ErrorConsoleWriter(Console.Error);
             defaultCommandsResolver = new DefaultCommandsResolver();
+            defaultCommandActivator = new DefaultCommandActivator();
             HelpBuilder = HelpBuilder.Default;
             AssemblyInfo = new AssemblyInfo(Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly());
         }
@@ -41,6 +34,15 @@ namespace CommandShell
         #endregion
 
         #region Properties
+
+        internal static bool InteractiveMode = false;
+        internal static AssemblyInfo AssemblyInfo;
+
+        private static Dictionary<CommandMetadata, object> commands;
+        internal static Dictionary<CommandMetadata, object> Commands
+        {
+            get { return commands ?? (commands = ResolveCommands()); }
+        }
 
         public static TextReader Input { get; set; }
 
@@ -50,11 +52,18 @@ namespace CommandShell
 
         private static readonly ICommandsResolver defaultCommandsResolver;
         private static ICommandsResolver commandsResolver;
-
         public static ICommandsResolver CommandsResolver
         {
             get { return commandsResolver ?? defaultCommandsResolver; }
             set { commandsResolver = value; }
+        }
+
+        private static readonly ICommandActivator defaultCommandActivator;
+        private static ICommandActivator sommandActivator;
+        public static ICommandActivator CommandActivator
+        {
+            get { return sommandActivator ?? defaultCommandActivator; }
+            set { sommandActivator = value; }
         }
 
         public static HelpBuilder HelpBuilder { get; set; }
@@ -65,7 +74,6 @@ namespace CommandShell
 
         public static int Run(string[] args)
         {
-            LoadCommands(CommandsResolver);
             try
             {
                 return CommandDispatcher.DispatchCommand(Commands, args);
@@ -77,27 +85,26 @@ namespace CommandShell
             catch (ShellCommandHelpException commandHelp)
             {
                 var metadata = Commands.Select(pair => pair.Key).SingleOrDefault(meta => meta.Type == commandHelp.Command.GetType());
-                Asserts.ReferenceNotNull(metadata, "Metadata forthe provided command object couldn't be found. Ensure to provide command object to ShellCommandHelpException.");
+                Asserts.ReferenceNotNull(metadata, "Metadata for the provided command object couldn't be found. Ensure to provide command object to ShellCommandHelpException.");
                 ShowCommandHelp(commandHelp.Command, metadata, commandHelp.ParsingResult);
             }
             catch (ExitInteractiveModeException)
             {
                 throw;
             }
-            catch (Exception error)
+            catch (Exception exception)
             {
-                ShowError(error);
+                ShowError(exception);
             }
             return -1;
         }
 
         public static int RunInteractive(string[] args)
         {
-            InteractiveMode = true;
             var returnValue = -1;
-            LoadCommands(CommandsResolver);
             try
             {
+                InteractiveMode = true;
                 while (true)
                 {
                     returnValue = Run(args);
@@ -106,6 +113,10 @@ namespace CommandShell
             }
             catch (ExitInteractiveModeException)
             {
+            }
+            finally
+            {
+                InteractiveMode = false;
             }
             return returnValue;
         }
@@ -121,9 +132,9 @@ namespace CommandShell
             {
                 ShowCommandHelp(commandHelp.Command, metadata, commandHelp.ParsingResult);
             }
-            catch (Exception error)
+            catch (Exception exception)
             {
-                ShowError(error);
+                ShowError(exception);
             }
             return -1;
         }
@@ -132,17 +143,17 @@ namespace CommandShell
 
         #region Helpers
 
-        private static void LoadCommands(ICommandsResolver resolver)
+        private static Dictionary<CommandMetadata, object> ResolveCommands()
         {
-            if (Commands != null) return;
-            var metadata = resolver.Resolve().ToArray();
+            var metadata = CommandsResolver.Resolve().ToArray();
             if (metadata.Any(meta => meta.Name.IsNullOrEmptyOrWhiteSpace())) throw new InvalidOperationException("Empty command name is not allowed.");
             if (metadata.GroupBy(meta => meta.Name).Any(gr => gr.Count() > 1)) throw new InvalidOperationException("Commands with the same name are not allowed.");
-            Commands = new Dictionary<CommandMetadata, object>();
+            commands = new Dictionary<CommandMetadata, object>();
             foreach (var commandMetadata in metadata)
-                Commands.Add(commandMetadata, Activator.CreateInstance(commandMetadata.Type));
-            if (Commands.All(command => command.Key.Type != typeof(HelpCommand))) Commands.Add(AttributedModelServices.GetMetadataFromType(typeof(HelpCommand)), new HelpCommand());
-            if (InteractiveMode && Commands.All(command => command.Key.Type != typeof(ExitCommand))) Commands.Add(AttributedModelServices.GetMetadataFromType(typeof(ExitCommand)), new ExitCommand());
+                commands.Add(commandMetadata, CommandActivator.Create(commandMetadata.Type));
+            if (commands.All(command => command.Key.Type != typeof(HelpCommand))) Commands.Add(AttributedModelServices.GetMetadataFromType(typeof(HelpCommand)), new HelpCommand());
+            if (InteractiveMode && commands.All(command => command.Key.Type != typeof(ExitCommand))) Commands.Add(AttributedModelServices.GetMetadataFromType(typeof(ExitCommand)), new ExitCommand());
+            return commands;
         }
 
         private static void ShowShellHelp()
@@ -165,9 +176,9 @@ namespace CommandShell
             // ReSharper restore PossibleNullReferenceException
         }
 
-        private static void ShowError(Exception error)
+        private static void ShowError(Exception exception)
         {
-            HelpBuilder.PrintError(Error, error);
+            HelpBuilder.PrintError(Error, exception);
         }
 
         private static string[] ParseNextLine()
