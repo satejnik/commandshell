@@ -21,7 +21,7 @@ namespace CommandShell.Infrastucture
 
         public static IEnumerable<CommandMetadata> GetMetadataFromTypeAssembly(Assembly assembly)
         {
-            return assembly.GetTypes().Where(type => Attribute.IsDefined(type, typeof(ShellCommandAttribute), false) && !type.IsAbstract).Select(GetMetadataFromType);
+            return assembly.GetTypes().Where(type => Attribute.IsDefined(type, typeof(ShellCommandAttribute), false) && !Attribute.IsDefined(type, typeof(IgnoreCommandAttribute), false) && !type.IsAbstract).Select(GetMetadataFromType);
         }
 
         public static CommandMetadata GetMetadata(object obj)

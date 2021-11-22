@@ -8,6 +8,7 @@ using CommandShell.Metadata;
 
 namespace CommandShell.Commands
 {
+    [IgnoreCommand]
     [ShellCommand("exit", Description = "Leaves interactive shell mode")]
     internal class ExitCommand
     {
