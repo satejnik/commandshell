@@ -3,16 +3,16 @@
 //  See LICENSE for details or visit http://opensource.org/licenses/MS-PL.
 //	----------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using CommandShell.Commands;
 using CommandShell.Extensions;
 using CommandShell.Helpers;
 using CommandShell.Infrastucture;
 using CommandShell.Infrastucture.Parsing;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 
 namespace CommandShell
 {
@@ -33,7 +33,7 @@ namespace CommandShell
             Input = Console.In;
             Output = Console.Out;
             Error = new ErrorConsoleWriter(Console.Error);
-            CommandsResolver = Infrastucture.CommandsResolver.Default;
+            defaultCommandsResolver = new DefaultCommandsResolver();
             HelpBuilder = HelpBuilder.Default;
             AssemblyInfo = new AssemblyInfo(Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly());
         }
@@ -48,7 +48,14 @@ namespace CommandShell
 
         public static TextWriter Error { get; set; }
 
-        public static ICommandsResolver CommandsResolver { get; set; }
+        private static readonly ICommandsResolver defaultCommandsResolver;
+        private static ICommandsResolver commandsResolver;
+
+        public static ICommandsResolver CommandsResolver
+        {
+            get { return commandsResolver ?? defaultCommandsResolver; }
+            set { commandsResolver = value; }
+        }
 
         public static HelpBuilder HelpBuilder { get; set; }
 
@@ -105,7 +112,7 @@ namespace CommandShell
 
         public static int RunCommand(object command, string[] args)
         {
-            var metadata = Infrastucture.CommandsResolver.GetCommandMetadata(command.GetType());
+            var metadata = AttributedModelServices.GetMetadata(command);
             try
             {
                 return CommandDispatcher.RunCommand(command, metadata, args);
@@ -134,8 +141,8 @@ namespace CommandShell
             Commands = new Dictionary<CommandMetadata, object>();
             foreach (var commandMetadata in metadata)
                 Commands.Add(commandMetadata, Activator.CreateInstance(commandMetadata.Type));
-            if (Commands.All(command => command.Key.Type != typeof(HelpCommand))) Commands.Add(Infrastucture.CommandsResolver.GetCommandMetadata(typeof(HelpCommand)), new HelpCommand());
-            if (InteractiveMode && Commands.All(command => command.Key.Type != typeof(ExitCommand))) Commands.Add(Infrastucture.CommandsResolver.GetCommandMetadata(typeof(ExitCommand)), new ExitCommand());
+            if (Commands.All(command => command.Key.Type != typeof(HelpCommand))) Commands.Add(AttributedModelServices.GetMetadataFromType(typeof(HelpCommand)), new HelpCommand());
+            if (InteractiveMode && Commands.All(command => command.Key.Type != typeof(ExitCommand))) Commands.Add(AttributedModelServices.GetMetadataFromType(typeof(ExitCommand)), new ExitCommand());
         }
 
         private static void ShowShellHelp()
