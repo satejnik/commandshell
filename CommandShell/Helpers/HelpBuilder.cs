@@ -53,6 +53,11 @@ namespace CommandShell.Helpers
             if (info == null) info = AssemblyInfo.Current;
             //PrintDefaultHelpHeader(writer, info);
             //writer.WriteLine();
+            if (!string.IsNullOrEmpty(metadata.Namespace))
+            {
+                writer.Write(metadata.Namespace);
+                writer.Write(" ");
+            }
             writer.Write(metadata.Name);
             writer.Write(" - ");
             writer.WriteLine(metadata.Description);
@@ -243,7 +248,7 @@ namespace CommandShell.Helpers
             if (length < 20) length = 20;
             var commandFormatString = "   {0,-" + length + "}- {1}";
             foreach (var command in commandsMetadata)
-                writer.WriteLine(commandFormatString, command.Name, command.Description);
+                writer.WriteLine(commandFormatString, string.IsNullOrEmpty(command.Namespace) ? command.Name : string.Format("{0} {1}", command.Namespace, command.Name), command.Description);
             writer.WriteLine(commandFormatString, "help <command>", "For help with one of the above commands");
             if (Shell.InteractiveMode) writer.WriteLine(commandFormatString, "exit", "Leaves interactive shell mode");
         }

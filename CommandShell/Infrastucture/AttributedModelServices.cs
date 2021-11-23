@@ -21,19 +21,19 @@ namespace CommandShell.Infrastucture
 
         public static IEnumerable<CommandMetadata> GetMetadataFromTypeAssembly(Assembly assembly)
         {
-            if (assembly == null) throw new ArgumentNullException("assembly");
+            Asserts.ArgumentNotNull(assembly, "assembly");
             return assembly.GetTypes().Where(type => Attribute.IsDefined(type, typeof(ShellCommandAttribute), false) && !Attribute.IsDefined(type, typeof(IgnoreCommandAttribute), false) && !type.IsAbstract).Select(GetMetadataFromType);
         }
 
         public static CommandMetadata GetMetadata(object command)
         {
-            if(command == null) throw new ArgumentNullException("command");
+            Asserts.ArgumentNotNull(command, "command");
             return GetMetadataFromType(command.GetType());
         }
 
         public static CommandMetadata GetMetadataFromType(Type type)
         {
-            if (type == null) throw new ArgumentNullException("type");
+            Asserts.ArgumentNotNull(type, "type");
             AssertCommandType(type);
             var attribute = (ShellCommandAttribute)type.GetCustomAttributes(typeof(ShellCommandAttribute), false).SingleOrDefault();
             if (attribute.Options != null) AssertOptionsType(attribute.Options);
@@ -41,6 +41,7 @@ namespace CommandShell.Infrastucture
             var runmethod = GetRunnableMethod(type, attribute.Options);
             return new CommandMetadata(type, attribute.Name.ToLower())
             {
+                Namespace = string.IsNullOrEmpty(attribute.Namespace) ? null : attribute.Namespace,
                 Description = attribute.Description,
                 Options = GetOptionsMetadata(attribute.Options),
                 HelpMethod = helpmethod,
@@ -54,13 +55,13 @@ namespace CommandShell.Infrastucture
 
         internal static void AssertCommandType(Type type)
         {
-            if (!Attribute.IsDefined(type, typeof(ShellCommandAttribute), false)) throw new TypeLoadException(string.Format("{0} does not provide ShellCommandAttribute attribute.", type));
-            if (type.GetConstructor(Type.EmptyTypes) == null) throw new TypeLoadException(string.Format("{0} does not provide parameterless constructor.", type));
+            Asserts.OperationNotAllowed(!Attribute.IsDefined(type, typeof(ShellCommandAttribute), false), string.Format("{0} does not provide ShellCommandAttribute attribute.", type));
+            //if (Attribute.IsDefined(type, typeof(IgnoreCommandAttribute), false)) throw new InvalidOperationException(string.Format("{0} has IgnoreCommandAttribute attribute applied.", type));
         }
 
         internal static void AssertOptionsType(Type type)
         {
-            if (type.GetConstructor(Type.EmptyTypes) == null) throw new TypeLoadException(string.Format("{0} does not provide parameterless constructor.", type));
+            Asserts.OperationNotAllowed(type.GetConstructor(Type.EmptyTypes) == null, string.Format("{0} does not provide parameterless constructor.", type));
         }
 
         private static CommandOptionsMetadata GetOptionsMetadata(Type optionsType)

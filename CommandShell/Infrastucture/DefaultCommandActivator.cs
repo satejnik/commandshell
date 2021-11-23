@@ -1,4 +1,5 @@
 ﻿using System;
+using CommandShell.Helpers;
 
 namespace CommandShell.Infrastucture
 {
@@ -6,6 +7,7 @@ namespace CommandShell.Infrastucture
     {
         public virtual object Create(Type type)
         {
+            Asserts.OperationNotAllowed(type.GetConstructor(Type.EmptyTypes) == null, string.Format("{0} does not provide parameterless constructor.", type));
             return Activator.CreateInstance(type);
         }
 

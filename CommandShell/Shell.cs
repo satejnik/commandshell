@@ -127,8 +127,8 @@ namespace CommandShell
         private static CommandMetadata[] ResolveCommands()
         {
             var metadata = CommandsResolver.Resolve().ToList();
-            if (metadata.Any(meta => meta.Name.IsNullOrEmptyOrWhiteSpace())) throw new InvalidOperationException("Empty command name is not allowed.");
-            if (metadata.GroupBy(meta => meta.Name).Any(gr => gr.Count() > 1)) throw new InvalidOperationException("Commands with the same name are not allowed.");
+            Asserts.OperationNotAllowed(metadata.Any(meta => meta.Name.IsNullOrEmptyOrWhiteSpace()), "Empty command name is not allowed.");
+            Asserts.OperationNotAllowed(metadata.GroupBy(meta => new { meta.Namespace, meta.Name }).Any(group => group.Count() > 1), "Commands with the same name are not allowed.");
             if (metadata.All(command => command.Type != typeof(HelpCommand))) metadata.Add(AttributedModelServices.GetMetadataFromType(typeof(HelpCommand)));
             if (InteractiveMode && metadata.All(command => command.Type != typeof(ExitCommand))) metadata.Add(AttributedModelServices.GetMetadataFromType(typeof(ExitCommand)));
             return metadata.ToArray();

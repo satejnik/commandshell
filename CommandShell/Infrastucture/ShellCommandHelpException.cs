@@ -5,6 +5,7 @@
 
 using System;
 using System.Linq;
+using CommandShell.Helpers;
 using CommandShell.Infrastucture.Parsing;
 
 namespace CommandShell.Infrastucture
@@ -13,8 +14,13 @@ namespace CommandShell.Infrastucture
     {
         #region Constructors
 
-        public ShellCommandHelpException(string command)
-            : this(Shell.Commands.SingleOrDefault(c => c.Name == command))
+        public ShellCommandHelpException(string name)
+            : this(null, name)
+        {
+        }
+
+        public ShellCommandHelpException(string @namespace, string command)
+            : this(Shell.Commands.SingleOrDefault(c => c.Namespace == @namespace && c.Name == command))
         {
         }
 
@@ -25,7 +31,7 @@ namespace CommandShell.Infrastucture
 
         public ShellCommandHelpException(CommandMetadata metadata)
         {
-            if (metadata == null) throw new ArgumentNullException("metadata");
+            Asserts.ArgumentNotNull(metadata, "metadata");
             Metadata = metadata;
         }
 

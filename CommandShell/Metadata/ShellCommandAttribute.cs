@@ -7,7 +7,7 @@ using System;
 
 namespace CommandShell.Metadata
 {
-    [AttributeUsage(AttributeTargets.Class,  AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public sealed class ShellCommandAttribute : Attribute
     {
         #region Constructor
@@ -20,6 +20,8 @@ namespace CommandShell.Metadata
         #endregion
 
         #region Properties
+
+        public string Namespace { get; set; }
 
         public string Name { get; private set; }
 

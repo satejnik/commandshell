@@ -17,8 +17,8 @@ namespace CommandShell.Commands
         {
             if (options.CommandName == null || !options.CommandName.Any())
                 throw new ShellHelpException();
-            var name = options.CommandName.First();
-            var metadata = Shell.Commands.SingleOrDefault(command => command.Name == name);
+            var args = options.CommandName.ToArray();
+            var metadata = CommandDispatcher.SearchMetadata(Shell.Commands, ref args);
             if (metadata == null) throw new ShellHelpException();
             throw new ShellCommandHelpException(metadata);
         }

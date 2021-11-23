@@ -10,7 +10,7 @@ namespace CommandShell.Commands
 {
     internal class HelpCommandOptions
     {
-        [ValueList("Name of a command to get help for", MinimumElements = 0, MaximumElements = 1)]
+        [ValueList("Name of a command to get help for", MinimumElements = 0, MaximumElements = 2)]
         public List<string> CommandName { get; set; }
     }
 }

@@ -3,6 +3,7 @@
 //  See LICENSE for details or visit http://opensource.org/licenses/MS-PL.
 //	----------------------------------------------------------------------
 
+using CommandShell.Helpers;
 using CommandShell.Infrastucture.Parsing;
 using System;
 using System.Collections.Generic;
@@ -19,14 +20,13 @@ namespace CommandShell.Infrastucture
         {
             try
             {
-                if (args == null || !args.Any()) throw new ShellHelpException();
-                var commandName = args.First().ToLower();
-                var metadata = commands.SingleOrDefault(meta => meta.Name == commandName);
+                var metadata = SearchMetadata(commands, ref args);
                 if (metadata == null) throw new ShellHelpException();
                 var command = Shell.CommandActivator.Create(metadata.Type);
+                Asserts.ReferenceNotNull(command, string.Format("Instance of the command {0} could not be created.", metadata.Name));
                 try
                 {
-                    return RunCommand(command, metadata, args.Skip(1).ToArray());
+                    return RunCommand(command, metadata, args);
                 }
                 finally
                 {
@@ -111,6 +111,7 @@ namespace CommandShell.Infrastucture
                     if (type == typeof(CommandMetadata)) parameters.Add(metadata);
                     else parameters.Add(parsingResult);
                 var command = Shell.CommandActivator.Create(metadata.Type);
+                Asserts.ReferenceNotNull(command, string.Format("Instance of the command {0} could not be created.", metadata.Name));
                 try
                 {
                     Shell.Output.WriteLine(metadata.HelpMethod.Invoke(command, parameters.ToArray()));
@@ -130,6 +131,29 @@ namespace CommandShell.Infrastucture
         private static AssemblyInfo GetAssemblyInfo()
         {
             return new AssemblyInfo(Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly());
+        }
+
+        internal static CommandMetadata SearchMetadata(CommandMetadata[] commands, ref string[] args)
+        {
+            if (args == null || !args.Any()) throw new ShellHelpException();
+            var @namespace = args.First().ToLower();
+            args = args.Skip(1).ToArray();
+            var candidates = commands.Where(meta => meta.Namespace == @namespace).ToArray();
+            if (candidates.Any())
+            {
+                var commandName = args.FirstOrDefault();
+                if (!string.IsNullOrEmpty(commandName))
+                {
+                    commandName = commandName.ToLower();
+                    var metadata = candidates.SingleOrDefault(meta => meta.Name == commandName);
+                    if (metadata != null)
+                    {
+                        args = args.Skip(1).ToArray();
+                        return metadata;
+                    }
+                }
+            }
+            return commands.SingleOrDefault(meta => string.IsNullOrEmpty(meta.Namespace) && meta.Name == @namespace);
         }
 
         #endregion

@@ -28,6 +28,8 @@ namespace CommandShell.Infrastucture
 
         internal MethodInfo HelpMethod { get; set; }
 
+        public string Namespace { get; internal set; }
+
         public string Name { get; private set; }
 
         public string Description { get; internal set; }
