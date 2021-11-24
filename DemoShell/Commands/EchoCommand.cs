@@ -3,16 +3,16 @@
 //  See LICENSE for details or visit http://opensource.org/licenses/MS-PL.
 //	----------------------------------------------------------------------
 
-using System.Linq;
 using CommandShell;
 using CommandShell.Metadata;
+using System.Linq;
 
 namespace DemoShell.Commands
 {
     [ShellCommand("echo", Description = "Echos writen values delimited by line", Options = typeof(EchoCommandOptions))]
     public class EchoCommand
     {
-        public void Run(EchoCommandOptions options)
+        public static void Run(EchoCommandOptions options)
         {
             if (options.Values == null || !options.Values.Any())
             {

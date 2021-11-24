@@ -22,7 +22,7 @@ namespace CommandShell.Infrastucture
         public static IEnumerable<CommandMetadata> GetMetadataFromTypeAssembly(Assembly assembly)
         {
             Asserts.ArgumentNotNull(assembly, "assembly");
-            return assembly.GetTypes().Where(type => Attribute.IsDefined(type, typeof(ShellCommandAttribute), false) && !Attribute.IsDefined(type, typeof(IgnoreCommandAttribute), false) && !type.IsAbstract).Select(GetMetadataFromType);
+            return assembly.GetTypes().Where(type => Attribute.IsDefined(type, typeof(ShellCommandAttribute), false) && !Attribute.IsDefined(type, typeof(IgnoreCommandAttribute), false) && (!type.IsAbstract || type.IsSealed)).Select(GetMetadataFromType);
         }
 
         public static CommandMetadata GetMetadata(object command)
@@ -57,11 +57,12 @@ namespace CommandShell.Infrastucture
         {
             Asserts.OperationNotAllowed(!Attribute.IsDefined(type, typeof(ShellCommandAttribute), false), string.Format("{0} does not provide ShellCommandAttribute attribute.", type));
             //if (Attribute.IsDefined(type, typeof(IgnoreCommandAttribute), false)) throw new InvalidOperationException(string.Format("{0} has IgnoreCommandAttribute attribute applied.", type));
+            //if (type.GetConstructor(Type.EmptyTypes) == null) throw new TypeLoadException(string.Format("{0} does not provide parameterless constructor.", type));
         }
 
         internal static void AssertOptionsType(Type type)
         {
-            Asserts.OperationNotAllowed(type.GetConstructor(Type.EmptyTypes) == null, string.Format("{0} does not provide parameterless constructor.", type));
+            Asserts.OperationNotAllowed(type.GetConstructor(Type.EmptyTypes) == null, string.Format("Options type '{0}' has to be a non static, non abstract class and provide parameterless constructor.", type));
         }
 
         private static CommandOptionsMetadata GetOptionsMetadata(Type optionsType)
@@ -169,17 +170,17 @@ namespace CommandShell.Infrastucture
             Asserts.OperationNotAllowed(methods.Length > 1, "More than one method to invoke found. Command method must be decorated with RunCommandAttribute or named Run. The method must have int or void as return type and have either void or only one appropriate options parameter type.");
             var method = methods.FirstOrDefault();
             if (method == null) throw new MissingMethodException("Target object does not contain any methods to invoke. Command method must be decorated with RunCommandAttribute or named Run. The method must have int or void as return type and have either void or only one appropriate options parameter type.");
-            if (!method.IsPublic || method.IsConstructor || method.IsStatic) throw new MethodAccessException("Target object does not contain appropriate method to invoke. Command method must be decorated with RunCommandAttribute or named Run. The method must have int or void as return type and have either void or only one appropriate options parameter type.");
+            if (!method.IsPublic || method.IsConstructor) throw new MethodAccessException("Target object does not contain appropriate method to invoke. Command method must be decorated with RunCommandAttribute or named Run. The method must have int or void as return type and have either void or only one appropriate options parameter type.");
             return method;
         }
 
         internal static MethodInfo GetHelpMethod(Type type)
         {
             var methods = type.GetMethods().Where(info => Attribute.IsDefined(info, typeof(GetHelpAttribute), false)).ToArray();
+            if (!methods.Any()) return null;
             Asserts.OperationNotAllowed(methods.Length > 1, "More than one method are decorated with GetHelpAttribute.");
-            if (methods.Length != 1) return null;
             var method = methods.First();
-            if (!method.IsPublic || method.IsConstructor || method.IsStatic) throw new MethodAccessException("Method decorated with GetHelpAttribute must be a public instance method.");
+            if (!method.IsPublic || method.IsConstructor) throw new MethodAccessException("Method decorated with GetHelpAttribute must be a public method.");
             Asserts.OperationNotAllowed(method.ReturnType != typeof(string), "Method decorated with GetHelpAttribute must have a string as return type.");
             Asserts.OperationNotAllowed(method.GetParameters().Any(param => param.ParameterType != typeof(CommandMetadata) && param.ParameterType != typeof(ParsingResult)), "Method decorated with GetHelpAttribute can have up to two parameters of type CommandMetadata or ParsingResult.");
             Asserts.OperationNotAllowed(method.GetParameters().Count(param => param.ParameterType == typeof(CommandMetadata)) > 1, "Method decorated with GetHelpAttribute can have up to two parameters of type CommandMetadata or ParsingResult.");

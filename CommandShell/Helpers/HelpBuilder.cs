@@ -15,20 +15,6 @@ namespace CommandShell.Helpers
 {
     public class HelpBuilder
     {
-        #region Constructors
-
-        private static readonly HelpBuilder Instance = new HelpBuilder();
-
-        public static HelpBuilder Default
-        {
-            get
-            {
-                return Instance;
-            }
-        }
-
-        #endregion
-
         #region Methods
 
         public virtual void PrintHelp(TextWriter writer = null, IEnumerable<CommandMetadata> commands = null, AssemblyInfo info = null)

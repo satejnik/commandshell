@@ -12,8 +12,8 @@ namespace DemoShell
     {
         static void Main(string[] args)
         {
-            Shell.Run(args);
-            //Shell.RunInteractive(args);
+            //Shell.Run(args);
+            Shell.RunInteractive(args);
             //Shell.RunCommand(new TestCommand(), args);
         }
     }

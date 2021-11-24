@@ -7,7 +7,7 @@ namespace CommandShell.Infrastucture
     {
         public virtual object Create(Type type)
         {
-            Asserts.OperationNotAllowed(type.GetConstructor(Type.EmptyTypes) == null, string.Format("{0} does not provide parameterless constructor.", type));
+            Asserts.OperationNotAllowed(type.GetConstructor(Type.EmptyTypes) == null, string.Format("Options type '{0}' has to be a non static, non abstract class and provide parameterless constructor.", type));
             return Activator.CreateInstance(type);
         }
 

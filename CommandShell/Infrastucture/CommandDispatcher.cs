@@ -22,15 +22,22 @@ namespace CommandShell.Infrastucture
             {
                 var metadata = SearchMetadata(commands, ref args);
                 if (metadata == null) throw new ShellHelpException();
-                var command = Shell.CommandActivator.Create(metadata.Type);
-                Asserts.ReferenceNotNull(command, string.Format("Instance of the command {0} could not be created.", metadata.Name));
+                object command = null;
+                if (!metadata.RunnableMethod.IsStatic)
+                {
+                    command = Shell.CommandActivator.Create(metadata.Type);
+                    Asserts.ReferenceNotNull(command, string.Format("Instance of command '{0}' could not be created.", metadata.Name));
+                }
                 try
                 {
                     return RunCommand(command, metadata, args);
                 }
                 finally
                 {
-                    Shell.CommandActivator.Release(command);
+                    if (!metadata.RunnableMethod.IsStatic)
+                    {
+                        Shell.CommandActivator.Release(command);
+                    }
                 }
             }
             catch (ShellHelpException)
@@ -58,7 +65,7 @@ namespace CommandShell.Infrastucture
                 }
                 ParsingResult parsingResult;
                 object options = null;
-                if (metadata.Type == metadata.Options.Type)
+                if (metadata.Type == metadata.Options.Type && command != null)
                     parsingResult = CommandOptionsParser.Parse(metadata.Options, command, args);
                 else
                 {
@@ -110,15 +117,22 @@ namespace CommandShell.Infrastucture
                 foreach (var type in metadata.HelpMethod.GetParameters().Select(param => param.ParameterType))
                     if (type == typeof(CommandMetadata)) parameters.Add(metadata);
                     else parameters.Add(parsingResult);
-                var command = Shell.CommandActivator.Create(metadata.Type);
-                Asserts.ReferenceNotNull(command, string.Format("Instance of the command {0} could not be created.", metadata.Name));
+                object command = null;
+                if (!metadata.HelpMethod.IsStatic)
+                {
+                    command = Shell.CommandActivator.Create(metadata.Type);
+                    Asserts.ReferenceNotNull(command, string.Format("Instance of the command {0} could not be created.", metadata.Name));
+                }
                 try
                 {
                     Shell.Output.WriteLine(metadata.HelpMethod.Invoke(command, parameters.ToArray()));
                 }
                 finally
                 {
-                    Shell.CommandActivator.Release(command);
+                    if (!metadata.HelpMethod.IsStatic)
+                    {
+                        Shell.CommandActivator.Release(command);
+                    }
                 }
             }
         }
