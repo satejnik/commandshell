@@ -75,7 +75,7 @@ namespace DemoShell.Commands
 
         #region Methods
 
-        [GetHelp]
+        //[GetHelp]
         public string GetUsage(CommandMetadata metadata, ParsingResult parsingResult)
         {
             return new StringBuilder(metadata.Name).AppendLine().AppendLine(metadata.Description)
