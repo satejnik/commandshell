@@ -3,38 +3,24 @@
 //  See LICENSE for details or visit http://opensource.org/licenses/MS-PL.
 //	----------------------------------------------------------------------
 
+using CommandShell.Infrastucture;
+using CommandShell.Infrastucture.Parsing;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CommandShell.Infrastucture;
-using CommandShell.Infrastucture.Parsing;
 
 namespace CommandShell.Helpers
 {
     public class HelpBuilder
     {
-        #region Constructors
-
-        private static readonly HelpBuilder Instance = new HelpBuilder();
-
-        public static HelpBuilder Default
-        {
-            get
-            {
-                return Instance;
-            }
-        }
-
-        #endregion
-
         #region Methods
 
         public virtual void PrintHelp(TextWriter writer = null, IEnumerable<CommandMetadata> commands = null, AssemblyInfo info = null)
         {
             if (writer == null) writer = Shell.Output;
-            if (commands == null) commands = Shell.Commands.Keys;
+            if (commands == null) commands = Shell.Commands;
             if (info == null) info = AssemblyInfo.Current;
             PrintDefaultHelpHeader(writer, info);
             writer.WriteLine();
@@ -53,6 +39,11 @@ namespace CommandShell.Helpers
             if (info == null) info = AssemblyInfo.Current;
             //PrintDefaultHelpHeader(writer, info);
             //writer.WriteLine();
+            if (!string.IsNullOrEmpty(metadata.Namespace))
+            {
+                writer.Write(metadata.Namespace);
+                writer.Write(" ");
+            }
             writer.Write(metadata.Name);
             writer.Write(" - ");
             writer.WriteLine(metadata.Description);
@@ -243,7 +234,7 @@ namespace CommandShell.Helpers
             if (length < 20) length = 20;
             var commandFormatString = "   {0,-" + length + "}- {1}";
             foreach (var command in commandsMetadata)
-                writer.WriteLine(commandFormatString, command.Name, command.Description);
+                writer.WriteLine(commandFormatString, string.IsNullOrEmpty(command.Namespace) ? command.Name : string.Format("{0} {1}", command.Namespace, command.Name), command.Description);
             writer.WriteLine(commandFormatString, "help <command>", "For help with one of the above commands");
             if (Shell.InteractiveMode) writer.WriteLine(commandFormatString, "exit", "Leaves interactive shell mode");
         }

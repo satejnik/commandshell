@@ -40,6 +40,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\TimeCommand.cs" />
     <Compile Include="Commands\TestEnum.cs" />
     <Compile Include="Commands\EchoCommand.cs" />
     <Compile Include="Commands\EchoCommandOptions.cs" />

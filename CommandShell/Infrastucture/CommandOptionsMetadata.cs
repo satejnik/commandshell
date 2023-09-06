@@ -25,6 +25,7 @@ namespace CommandShell.Infrastucture
 
         internal CommandOptionsMetadata(Type type)
         {
+            Asserts.ArgumentNotNull(type, "type");
             Type = type;
             metadata = new HashSet<CommandOptionMetadataBase>();
         }

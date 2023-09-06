@@ -50,6 +50,10 @@
   <ItemGroup>
     <Compile Include="Helpers\Converter.cs" />
     <Compile Include="Helpers\Validator.cs" />
+    <Compile Include="Infrastucture\AttributedModelServices.cs" />
+    <Compile Include="Infrastucture\DefaultCommandActivator.cs" />
+    <Compile Include="Infrastucture\ICommandActivator.cs" />
+    <Compile Include="Metadata\IgnoreCommandAttribute.cs" />
     <Compile Include="TwoWayEnumerator.cs" />
     <Compile Include="Commands\ExitCommand.cs" />
     <Compile Include="Commands\HelpCommand.cs" />
@@ -76,7 +80,7 @@
     <Compile Include="Infrastucture\ShellCommandHelpException.cs" />
     <Compile Include="Infrastucture\ShellHelpException.cs" />
     <Compile Include="Infrastucture\CommandDispatcher.cs" />
-    <Compile Include="Infrastucture\CommandsResolver.cs" />
+    <Compile Include="Infrastucture\DefaultCommandsResolver.cs" />
     <Compile Include="Infrastucture\ICommandsResolver.cs" />
     <Compile Include="Infrastucture\ShellException.cs" />
     <Compile Include="Infrastucture\CommandValueOptionMetadata.cs" />

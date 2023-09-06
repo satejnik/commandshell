@@ -3,12 +3,13 @@
 //  See LICENSE for details or visit http://opensource.org/licenses/MS-PL.
 //	----------------------------------------------------------------------
 
-using System.Linq;
 using CommandShell.Infrastucture;
 using CommandShell.Metadata;
+using System.Linq;
 
 namespace CommandShell.Commands
 {
+    [IgnoreCommand]
     [ShellCommand("help", Description = "Get help with one of the above commands", Options = typeof(HelpCommandOptions))]
     internal class HelpCommand
     {
@@ -16,9 +17,10 @@ namespace CommandShell.Commands
         {
             if (options.CommandName == null || !options.CommandName.Any())
                 throw new ShellHelpException();
-            var name = options.CommandName.First();
-            if (Shell.Commands.All(command => command.Key.Name != name)) throw new ShellHelpException();
-            throw new ShellCommandHelpException(Shell.Commands.Single(command => command.Key.Name == name).Value);
+            var args = options.CommandName.ToArray();
+            var metadata = CommandDispatcher.SearchMetadata(Shell.Commands, ref args);
+            if (metadata == null) throw new ShellHelpException();
+            throw new ShellCommandHelpException(metadata);
         }
     }
 }

@@ -3,29 +3,19 @@
 //  See LICENSE for details or visit http://opensource.org/licenses/MS-PL.
 //	----------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using CommandShell.Commands;
 using CommandShell.Extensions;
 using CommandShell.Helpers;
 using CommandShell.Infrastucture;
 using CommandShell.Infrastucture.Parsing;
+using System;
+using System.IO;
+using System.Linq;
 
 namespace CommandShell
 {
     public static class Shell
     {
-        #region Fields
-
-        internal static bool InteractiveMode = false;
-        internal static Dictionary<CommandMetadata, object> Commands;
-        internal static AssemblyInfo AssemblyInfo;
-
-        #endregion
-
         #region Constructor
 
         static Shell()
@@ -33,14 +23,22 @@ namespace CommandShell
             Input = Console.In;
             Output = Console.Out;
             Error = new ErrorConsoleWriter(Console.Error);
-            CommandsResolver = Infrastucture.CommandsResolver.Default;
-            HelpBuilder = HelpBuilder.Default;
-            AssemblyInfo = new AssemblyInfo(Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly());
+            defaultCommandsResolver = new DefaultCommandsResolver();
+            defaultCommandActivator = new DefaultCommandActivator();
+            defaultHelpBuilder = new HelpBuilder();
         }
 
         #endregion
 
         #region Properties
+
+        internal static bool InteractiveMode = false;
+
+        private static CommandMetadata[] commands;
+        internal static CommandMetadata[] Commands
+        {
+            get { return commands ?? (commands = ResolveCommands()); }
+        }
 
         public static TextReader Input { get; set; }
 
@@ -48,9 +46,29 @@ namespace CommandShell
 
         public static TextWriter Error { get; set; }
 
-        public static ICommandsResolver CommandsResolver { get; set; }
+        private static readonly ICommandsResolver defaultCommandsResolver;
+        private static ICommandsResolver commandsResolver;
+        public static ICommandsResolver CommandsResolver
+        {
+            get { return commandsResolver ?? defaultCommandsResolver; }
+            set { commandsResolver = value; }
+        }
 
-        public static HelpBuilder HelpBuilder { get; set; }
+        private static readonly ICommandActivator defaultCommandActivator;
+        private static ICommandActivator sommandActivator;
+        public static ICommandActivator CommandActivator
+        {
+            get { return sommandActivator ?? defaultCommandActivator; }
+            set { sommandActivator = value; }
+        }
+
+        private static readonly HelpBuilder defaultHelpBuilder;
+        private static HelpBuilder helpBuilder;
+        public static HelpBuilder HelpBuilder
+        {
+            get { return helpBuilder ?? defaultHelpBuilder; }
+            set { helpBuilder = value; }
+        }
 
         #endregion
 
@@ -58,39 +76,27 @@ namespace CommandShell
 
         public static int Run(string[] args)
         {
-            LoadCommands(CommandsResolver);
             try
             {
                 return CommandDispatcher.DispatchCommand(Commands, args);
-            }
-            catch (ShellHelpException)
-            {
-                ShowShellHelp();
-            }
-            catch (ShellCommandHelpException commandHelp)
-            {
-                var metadata = Commands.Select(pair => pair.Key).SingleOrDefault(meta => meta.Type == commandHelp.Command.GetType());
-                Asserts.ReferenceNotNull(metadata, "Metadata forthe provided command object couldn't be found. Ensure to provide command object to ShellCommandHelpException.");
-                ShowCommandHelp(commandHelp.Command, metadata, commandHelp.ParsingResult);
             }
             catch (ExitInteractiveModeException)
             {
                 throw;
             }
-            catch (Exception error)
+            catch (Exception exception)
             {
-                ShowError(error);
+                ShowError(exception);
             }
             return -1;
         }
 
         public static int RunInteractive(string[] args)
         {
-            InteractiveMode = true;
             var returnValue = -1;
-            LoadCommands(CommandsResolver);
             try
             {
+                InteractiveMode = true;
                 while (true)
                 {
                     returnValue = Run(args);
@@ -100,23 +106,22 @@ namespace CommandShell
             catch (ExitInteractiveModeException)
             {
             }
+            finally
+            {
+                InteractiveMode = false;
+            }
             return returnValue;
         }
 
         public static int RunCommand(object command, string[] args)
         {
-            var metadata = Infrastucture.CommandsResolver.GetCommandMetadata(command.GetType());
             try
             {
-                return CommandDispatcher.RunCommand(command, metadata, args);
+                return CommandDispatcher.RunCommand(command, AttributedModelServices.GetMetadata(command), args);
             }
-            catch (ShellCommandHelpException commandHelp)
+            catch (Exception exception)
             {
-                ShowCommandHelp(commandHelp.Command, metadata, commandHelp.ParsingResult);
-            }
-            catch (Exception error)
-            {
-                ShowError(error);
+                ShowError(exception);
             }
             return -1;
         }
@@ -125,42 +130,18 @@ namespace CommandShell
 
         #region Helpers
 
-        private static void LoadCommands(ICommandsResolver resolver)
+        private static CommandMetadata[] ResolveCommands()
         {
-            if (Commands != null) return;
-            var metadata = resolver.Resolve().ToArray();
-            if (metadata.Any(meta => meta.Name.IsNullOrEmptyOrWhiteSpace())) throw new InvalidOperationException("Empty command name is not allowed.");
-            if (metadata.GroupBy(meta => meta.Name).Any(gr => gr.Count() > 1)) throw new InvalidOperationException("Commands with the same name are not allowed.");
-            Commands = new Dictionary<CommandMetadata, object>();
-            foreach (var commandMetadata in metadata)
-                Commands.Add(commandMetadata, Activator.CreateInstance(commandMetadata.Type));
-            if (Commands.All(command => command.Key.Type != typeof(HelpCommand))) Commands.Add(Infrastucture.CommandsResolver.GetCommandMetadata(typeof(HelpCommand)), new HelpCommand());
-            if (InteractiveMode && Commands.All(command => command.Key.Type != typeof(ExitCommand))) Commands.Add(Infrastucture.CommandsResolver.GetCommandMetadata(typeof(ExitCommand)), new ExitCommand());
+            var metadata = CommandsResolver.Resolve().ToList();
+            Asserts.OperationNotAllowed(metadata.GroupBy(meta => new { meta.Namespace, meta.Name }).Any(group => group.Count() > 1), "Commands with the same name are not allowed.");
+            if (metadata.All(command => command.Type != typeof(HelpCommand))) metadata.Add(AttributedModelServices.GetMetadataFromType(typeof(HelpCommand)));
+            if (InteractiveMode && metadata.All(command => command.Type != typeof(ExitCommand))) metadata.Add(AttributedModelServices.GetMetadataFromType(typeof(ExitCommand)));
+            return metadata.ToArray();
         }
 
-        private static void ShowShellHelp()
+        private static void ShowError(Exception exception)
         {
-            HelpBuilder.PrintHelp(Output, Commands.Keys, AssemblyInfo);
-        }
-
-        private static void ShowCommandHelp(object command, CommandMetadata metadata, ParsingResult parsingResult)
-        {
-            // ReSharper disable PossibleNullReferenceException
-            if (metadata.HelpMethod == null) HelpBuilder.PrintCommandHelp(Output, metadata, AssemblyInfo, parsingResult);
-            else
-            {
-                var parameters = new List<object>();
-                foreach (var type in metadata.HelpMethod.GetParameters().Select(param => param.ParameterType))
-                    if (type == typeof(CommandMetadata)) parameters.Add(metadata);
-                    else parameters.Add(parsingResult);
-                Output.WriteLine(metadata.HelpMethod.Invoke(command, parameters.ToArray()));
-            }
-            // ReSharper restore PossibleNullReferenceException
-        }
-
-        private static void ShowError(Exception error)
-        {
-            HelpBuilder.PrintError(Error, error);
+            HelpBuilder.PrintError(Error, exception);
         }
 
         private static string[] ParseNextLine()

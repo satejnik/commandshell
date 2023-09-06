@@ -5,6 +5,7 @@
 
 using System;
 using System.Reflection;
+using CommandShell.Helpers;
 
 namespace CommandShell.Infrastucture
 {
@@ -14,6 +15,8 @@ namespace CommandShell.Infrastucture
 
         internal CommandMetadata(Type type, string name)
         {
+            Asserts.ArgumentNotNull(type, "type");
+            Asserts.ArgumentNotNullOrEmptyOrWhitespace(name, "name");
             Type = type;
             Name = name;
         }
@@ -27,6 +30,8 @@ namespace CommandShell.Infrastucture
         internal MethodInfo RunnableMethod { get; set; }
 
         internal MethodInfo HelpMethod { get; set; }
+
+        public string Namespace { get; internal set; }
 
         public string Name { get; private set; }
 

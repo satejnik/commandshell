@@ -3,11 +3,12 @@
 //  See LICENSE for details or visit http://opensource.org/licenses/MS-PL.
 //	----------------------------------------------------------------------
 
+using CommandShell.Helpers;
+using CommandShell.Infrastucture.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using CommandShell.Infrastucture.Parsing;
 
 namespace CommandShell.Infrastucture
 {
@@ -15,49 +16,78 @@ namespace CommandShell.Infrastucture
     {
         #region Methods
 
-        internal static int DispatchCommand(Dictionary<CommandMetadata, object> commands, string[] args)
+        internal static int DispatchCommand(CommandMetadata[] commands, string[] args)
         {
-            if (args == null || !args.Any()) throw new ShellHelpException();
-            var commandName = args.First().ToLower();
-            if (commands.All(meta => meta.Key.Name != commandName)) throw new ShellHelpException();
-            var command = commands.Single(meta => meta.Key.Name == commandName).Value;
-            var metadata = commands.Single(meta => meta.Key.Name == commandName).Key;
-            return RunCommand(command, metadata, args.Skip(1).ToArray());
+            try
+            {
+                var metadata = SearchMetadata(commands, ref args);
+                if (metadata == null) throw new ShellHelpException();
+                object command = null;
+                if (!metadata.RunnableMethod.IsStatic)
+                {
+                    command = Shell.CommandActivator.Create(metadata.Type);
+                    Asserts.ReferenceNotNull(command, string.Format("Instance of command '{0}' could not be created.", metadata.Name));
+                }
+                try
+                {
+                    return RunCommand(command, metadata, args);
+                }
+                finally
+                {
+                    if (!metadata.RunnableMethod.IsStatic)
+                    {
+                        Shell.CommandActivator.Release(command);
+                    }
+                }
+            }
+            catch (ShellHelpException)
+            {
+                ShowHelp();
+            }
+            return -1;
         }
 
         internal static int RunCommand(object command, CommandMetadata metadata, string[] args)
         {
-            if (metadata.Options == null)
+            try
             {
+                if (metadata.Options == null)
+                {
+                    try
+                    {
+                        return Run(command, metadata, null);
+                    }
+                    catch (ShellCommandHelpException helpException)
+                    {
+                        helpException.ParsingResult = new ParsingResult(new List<ParsingError>());
+                        throw;
+                    }
+                }
+                ParsingResult parsingResult;
+                object options = null;
+                if (metadata.Type == metadata.Options.Type && command != null)
+                    parsingResult = CommandOptionsParser.Parse(metadata.Options, command, args);
+                else
+                {
+                    options = Activator.CreateInstance(metadata.Options.Type);
+                    parsingResult = CommandOptionsParser.Parse(metadata.Options, options, args);
+                }
+                if (!parsingResult) throw new ShellCommandHelpException(metadata) { ParsingResult = parsingResult };
                 try
                 {
-                    return Run(command, metadata, null);
+                    return Run(command, metadata, options);
                 }
                 catch (ShellCommandHelpException helpException)
                 {
-                    helpException.ParsingResult = new ParsingResult(new List<ParsingError>());
+                    helpException.ParsingResult = parsingResult;
                     throw;
                 }
             }
-            ParsingResult parsingResult;
-            object options = null;
-            if (metadata.Type == metadata.Options.Type)
-                parsingResult = CommandOptionsParser.Parse(metadata.Options, command, args);
-            else
+            catch (ShellCommandHelpException commandHelp)
             {
-                options = Activator.CreateInstance(metadata.Options.Type);
-                parsingResult = CommandOptionsParser.Parse(metadata.Options, options, args);
+                ShowCommandHelp(commandHelp.Metadata, commandHelp.ParsingResult);
             }
-            if (!parsingResult) throw new ShellCommandHelpException(command) { ParsingResult = parsingResult };
-            try
-            {
-                return Run(command, metadata, options);
-            }
-            catch (ShellCommandHelpException helpException)
-            {
-                helpException.ParsingResult = parsingResult;
-                throw;
-            }
+            return -1;
         }
 
         #endregion
@@ -76,6 +106,68 @@ namespace CommandShell.Infrastucture
                 throw invocationError.InnerException;
             }
             return returnValue != null ? (int)returnValue : 0;
+        }
+
+        private static void ShowCommandHelp(CommandMetadata metadata, ParsingResult parsingResult)
+        {
+            if (metadata.HelpMethod == null) Shell.HelpBuilder.PrintCommandHelp(Shell.Output, metadata, GetAssemblyInfo(), parsingResult);
+            else
+            {
+                var parameters = new List<object>();
+                foreach (var type in metadata.HelpMethod.GetParameters().Select(param => param.ParameterType))
+                    if (type == typeof(CommandMetadata)) parameters.Add(metadata);
+                    else parameters.Add(parsingResult);
+                object command = null;
+                if (!metadata.HelpMethod.IsStatic)
+                {
+                    command = Shell.CommandActivator.Create(metadata.Type);
+                    Asserts.ReferenceNotNull(command, string.Format("Instance of the command {0} could not be created.", metadata.Name));
+                }
+                try
+                {
+                    Shell.Output.WriteLine(metadata.HelpMethod.Invoke(command, parameters.ToArray()));
+                }
+                finally
+                {
+                    if (!metadata.HelpMethod.IsStatic)
+                    {
+                        Shell.CommandActivator.Release(command);
+                    }
+                }
+            }
+        }
+
+        private static void ShowHelp()
+        {
+            Shell.HelpBuilder.PrintHelp(Shell.Output, Shell.Commands, GetAssemblyInfo());
+        }
+
+        private static AssemblyInfo GetAssemblyInfo()
+        {
+            return new AssemblyInfo(Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly());
+        }
+
+        internal static CommandMetadata SearchMetadata(CommandMetadata[] commands, ref string[] args)
+        {
+            if (args == null || !args.Any()) throw new ShellHelpException();
+            var @namespace = args.First().ToLower();
+            args = args.Skip(1).ToArray();
+            var candidates = commands.Where(meta => meta.Namespace == @namespace).ToArray();
+            if (candidates.Any())
+            {
+                var commandName = args.FirstOrDefault();
+                if (!string.IsNullOrEmpty(commandName))
+                {
+                    commandName = commandName.ToLower();
+                    var metadata = candidates.SingleOrDefault(meta => meta.Name == commandName);
+                    if (metadata != null)
+                    {
+                        args = args.Skip(1).ToArray();
+                        return metadata;
+                    }
+                }
+            }
+            return commands.SingleOrDefault(meta => string.IsNullOrEmpty(meta.Namespace) && meta.Name == @namespace);
         }
 
         #endregion

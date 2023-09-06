@@ -4,6 +4,8 @@
 //	----------------------------------------------------------------------
 
 using System;
+using System.Linq;
+using CommandShell.Helpers;
 using CommandShell.Infrastucture.Parsing;
 
 namespace CommandShell.Infrastucture
@@ -12,16 +14,32 @@ namespace CommandShell.Infrastucture
     {
         #region Constructors
 
-        public ShellCommandHelpException(object command)
+        public ShellCommandHelpException(string name)
+            : this(null, name)
         {
-            Command = command;
+        }
+
+        public ShellCommandHelpException(string @namespace, string command)
+            : this(Shell.Commands.SingleOrDefault(c => c.Namespace == @namespace && c.Name == command))
+        {
+        }
+
+        public ShellCommandHelpException(object command)
+            : this(AttributedModelServices.GetMetadata(command))
+        {
+        }
+
+        public ShellCommandHelpException(CommandMetadata metadata)
+        {
+            Asserts.ArgumentNotNull(metadata, "metadata");
+            Metadata = metadata;
         }
 
         #endregion
 
         #region Properties
 
-        public object Command { get; private set; }
+        public CommandMetadata Metadata { get; private set; }
 
         internal ParsingResult ParsingResult { get; set; }
 
